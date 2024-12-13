@@ -1,6 +1,6 @@
 # web
 
-A barebones web template with basic email authentication flow.
+An even more barebones web template.
 
 ## Resources
 

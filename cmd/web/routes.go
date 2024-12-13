@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/micahco/web/ui"
+	"github.com/micahco/web-lite/ui"
 )
 
 type withError func(w http.ResponseWriter, r *http.Request) error
@@ -51,24 +50,17 @@ func (app *application) routes() http.Handler {
 		r.Use(app.noSurf)
 		r.Use(app.authenticate)
 
-		r.Get("/", app.handle(app.getIndex))
-
 		r.Route("/auth", func(r chi.Router) {
+			r.Get("/login", app.handle(app.handleAuthLoginGet))
 			r.Post("/login", app.handle(app.handleAuthLoginPost))
 			r.Post("/logout", app.handle(app.handleAuthLogoutPost))
 			r.Post("/signup", app.handle(app.handleAuthSignupPost))
-			r.Get("/register", app.handle(app.handleAuthRegisterGet))
-			r.Post("/register", app.handle(app.handleAuthRegisterPost))
-			r.Get("/reset", app.handle(app.handleAuthResetGet))
-			r.Post("/reset", app.handle(app.handleAuthResetPost))
-			r.Get("/reset/update", app.handle(app.handleAuthResetUpdateGet))
-			r.Post("/reset/update", app.handle(app.handleAuthResetUpdatePost))
 		})
 
-		r.Route("/articles", func(r chi.Router) {
+		r.Route("/dashboard", func(r chi.Router) {
 			r.Use(app.requireAuthentication)
 
-			r.Get("/{id}", app.handle(app.getArticleID))
+			r.Get("/", app.handle(app.handleDashboardGet))
 		})
 	})
 
@@ -96,39 +88,4 @@ func (app *application) handleFavicon(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.ServeFileFS(w, r, ui.Files, "static/favicon.ico")
-}
-
-type userData struct {
-	Email string
-}
-
-func (app *application) getIndex(w http.ResponseWriter, r *http.Request) error {
-	if app.isAuthenticated(r) {
-		suid, err := app.getSessionUserID(r)
-		if err != nil {
-			return err
-		}
-
-		u, err := app.models.User.GetWithID(suid)
-		if err != nil {
-			return err
-		}
-
-		return app.render(w, r, http.StatusOK, "dashboard.tmpl", userData{u.Email})
-	}
-
-	return app.render(w, r, http.StatusOK, "login.tmpl", nil)
-}
-
-func (app *application) getArticleID(w http.ResponseWriter, r *http.Request) error {
-	p := chi.URLParam(r, "id")
-
-	id, err := strconv.Atoi(p)
-	if err != nil {
-		return app.renderError(w, r, http.StatusBadRequest, err)
-	}
-
-	fmt.Fprintf(w, "Article ID: %d", id)
-
-	return nil
 }

@@ -25,10 +25,12 @@ func (formErrors FormErrors) Error() string {
 	return strings.TrimSpace(buff.String())
 }
 
+// Push form errors to session data
 func (app *application) putFormErrors(r *http.Request, formErrors FormErrors) {
 	app.sessionManager.Put(r.Context(), formErrorsSessionKey, formErrors)
 }
 
+// Pop form errors from session data
 func (app *application) popFormErrors(r *http.Request) FormErrors {
 	exists := app.sessionManager.Exists(r.Context(), formErrorsSessionKey)
 	if exists {
@@ -41,6 +43,7 @@ func (app *application) popFormErrors(r *http.Request) FormErrors {
 	return FormErrors{}
 }
 
+// Decode form value to struct and check for any form errors
 func (app *application) parseForm(r *http.Request, dst any) error {
 	err := r.ParseForm()
 	if err != nil {

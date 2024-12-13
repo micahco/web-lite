@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/justinas/nosurf"
 )
 
@@ -66,13 +65,15 @@ func (app *application) csrfFailureHandler() http.Handler {
 // If all systems check, then set authenticated context to the request.
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id, ok := app.sessionManager.Get(r.Context(), authenticatedUserIDSessionKey).(uuid.UUID)
-		if !ok {
+		id := app.sessionManager.GetInt(r.Context(), authenticatedUserIDSessionKey)
+		if id == 0 {
+			// Not authenticated, continue without context
 			next.ServeHTTP(w, r)
 
 			return
 		}
 
+		// Check if user with ID exists in database
 		exists, err := app.models.User.Exists(id)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -81,6 +82,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		// If so, create context to include in this request
 		if exists {
 			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
 			r = r.WithContext(ctx)

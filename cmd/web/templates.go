@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/justinas/nosurf"
-	"github.com/micahco/web/ui"
+	"github.com/micahco/web-lite/ui"
 )
 
 type templateData struct {
@@ -92,8 +92,8 @@ func writeTemplate(t *template.Template, td templateData, w http.ResponseWriter,
 var functions = template.FuncMap{}
 
 // Create new template cache with ui.Files embedded file system.
-// Creates a template for each page in the web/pages directory
-// nested with web/base.tmpl and web/partials.
+// Creates a template for each page in the ui/web/pages directory
+// nested with ui/web/base.tmpl and ui/web/partials.
 func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 	fsys := ui.Files

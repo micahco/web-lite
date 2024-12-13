@@ -2,24 +2,19 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-	"time"
 
 	"github.com/alexedwards/argon2id"
-	"github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserModel struct {
-	pool *pgxpool.Pool
+	db *sql.DB
 }
 
 type User struct {
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	Email        string
+	ID           int
+	Username     string
 	PasswordHash []byte
 }
 
@@ -38,8 +33,8 @@ func (u *User) SetPasswordHash(password string) error {
 	return nil
 }
 
-func (m *UserModel) New(email, password string) (*User, error) {
-	user := &User{Email: email}
+func (m *UserModel) New(username, password string) (*User, error) {
+	user := &User{Username: username}
 
 	err := user.SetPasswordHash(password)
 	if err != nil {
@@ -60,21 +55,22 @@ func (m *UserModel) Insert(user *User) error {
 		return err
 	}
 
-	sql := `
-		INSERT INTO user_ (email_, password_hash_)
-		VALUES($1, $2)
-		RETURNING id_, created_at_;`
+	query := `
+		INSERT INTO User (username, password)
+		VALUES(?, ?)
+		RETURNING id;`
 
-	args := []any{user.Email, user.PasswordHash}
+	args := []any{user.Username, user.PasswordHash}
 
 	ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 	defer cancel()
 
-	err = m.pool.QueryRow(ctx, sql, args...).Scan(&user.ID, &user.CreatedAt)
+	err = m.db.QueryRowContext(ctx, query, args...).Scan(&user.ID)
 	if err != nil {
 		switch {
-		case pgErrCode(err) == pgerrcode.UniqueViolation:
-			return ErrDuplicateEmail
+		// Check for SQLite unique violation
+		case err.Error() == "unique violation":
+			return ErrDuplicateUsername
 		default:
 			return err
 		}
@@ -83,25 +79,23 @@ func (m *UserModel) Insert(user *User) error {
 	return nil
 }
 
-func (m *UserModel) GetWithID(id uuid.UUID) (*User, error) {
-	var u User
-
-	sql := `
-		SELECT id_, created_at_, email_, password_hash_
-		FROM user_ WHERE id_ = $1;`
+func (m *UserModel) GetWithID(id int) (*User, error) {
+	query := `
+		SELECT id, username, password
+		FROM User WHERE id = ?;`
 
 	ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 	defer cancel()
 
-	err := m.pool.QueryRow(ctx, sql, id).Scan(
+	var u User
+	err := m.db.QueryRowContext(ctx, query, id).Scan(
 		&u.ID,
-		&u.CreatedAt,
-		&u.Email,
+		&u.Username,
 		&u.PasswordHash,
 	)
 	if err != nil {
 		switch {
-		case errors.Is(err, pgx.ErrNoRows):
+		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrInvalidCredentials
 		default:
 			return nil, err
@@ -111,25 +105,23 @@ func (m *UserModel) GetWithID(id uuid.UUID) (*User, error) {
 	return &u, nil
 }
 
-func (m *UserModel) GetWithEmail(email string) (*User, error) {
-	var u User
-
-	sql := `
-		SELECT id_, created_at_, email_, password_hash_
-		FROM user_ WHERE email_ = $1;`
+func (m *UserModel) GetWithUsername(username string) (*User, error) {
+	query := `
+		SELECT id, username, password
+		FROM User WHERE username = ?;`
 
 	ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 	defer cancel()
 
-	err := m.pool.QueryRow(ctx, sql, email).Scan(
+	var u User
+	err := m.db.QueryRowContext(ctx, query, username).Scan(
 		&u.ID,
-		&u.CreatedAt,
-		&u.Email,
+		&u.Username,
 		&u.PasswordHash,
 	)
 	if err != nil {
 		switch {
-		case errors.Is(err, pgx.ErrNoRows):
+		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrInvalidCredentials
 		default:
 			return nil, err
@@ -139,8 +131,8 @@ func (m *UserModel) GetWithEmail(email string) (*User, error) {
 	return &u, nil
 }
 
-func (m *UserModel) GetForCredentials(email, password string) (*User, error) {
-	u, err := m.GetWithEmail(email)
+func (m *UserModel) GetForCredentials(username, password string) (*User, error) {
+	u, err := m.GetWithUsername(username)
 	if err != nil {
 		return nil, err
 	}
@@ -156,20 +148,19 @@ func (m *UserModel) GetForCredentials(email, password string) (*User, error) {
 	return u, nil
 }
 
-func (m *UserModel) Exists(id uuid.UUID) (bool, error) {
-	var exists bool
-
-	sql := `
+func (m *UserModel) Exists(id int) (bool, error) {
+	query := `
 		SELECT EXISTS (
 			SELECT 1
-			FROM user_
-			WHERE id_ = $1
+			FROM User
+			WHERE id = ?
 		);`
 
 	ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 	defer cancel()
 
-	err := m.pool.QueryRow(ctx, sql, id).Scan(&exists)
+	var exists bool
+	err := m.db.QueryRowContext(ctx, query, id).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -177,20 +168,19 @@ func (m *UserModel) Exists(id uuid.UUID) (bool, error) {
 	return exists, nil
 }
 
-func (m *UserModel) ExistsWithEmail(email string) (bool, error) {
-	var exists bool
-
-	sql := `
+func (m *UserModel) ExistsWithUsername(username string) (bool, error) {
+	query := `
 		SELECT EXISTS (
 			SELECT 1
-			FROM user_
-			WHERE email_ = $1
+			FROM User
+			WHERE username = ?
 		);`
 
 	ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 	defer cancel()
 
-	err := m.pool.QueryRow(ctx, sql, email).Scan(&exists)
+	var exists bool
+	err := m.db.QueryRowContext(ctx, query, username).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -204,13 +194,13 @@ func (m UserModel) Update(user *User) error {
 		return err
 	}
 
-	sql := `
-		UPDATE user_ 
-        SET email_ = $1, password_hash_ = $2
-        WHERE id_ = $3;`
+	query := `
+		UPDATE User 
+        SET username = ?, password = ?
+        WHERE id = ?;`
 
 	args := []any{
-		user.Email,
+		user.Username,
 		user.PasswordHash,
 		user.ID,
 	}
@@ -218,13 +208,14 @@ func (m UserModel) Update(user *User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 	defer cancel()
 
-	_, err = m.pool.Exec(ctx, sql, args...)
+	_, err = m.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		switch {
-		case errors.Is(err, pgx.ErrNoRows):
+		case errors.Is(err, sql.ErrNoRows):
 			return ErrEditConflict
-		case pgErrCode(err) == pgerrcode.UniqueViolation:
-			return ErrDuplicateEmail
+			// Check for SQLite unique violation
+		case err.Error() == "unique violation":
+			return ErrDuplicateUsername
 		default:
 			return err
 		}
