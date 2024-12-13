@@ -57,7 +57,7 @@ func (app *application) routes() http.Handler {
 			r.Post("/signup", app.handle(app.handleAuthSignupPost))
 		})
 
-		r.Route("/dashboard", func(r chi.Router) {
+		r.Route("/", func(r chi.Router) {
 			r.Use(app.requireAuthentication)
 
 			r.Get("/", app.handle(app.handleDashboardGet))

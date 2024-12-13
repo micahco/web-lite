@@ -11,12 +11,12 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/lmittmann/tint"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/micahco/web-lite/internal/models"
 )
 

@@ -2,7 +2,7 @@ bin/
 
 *.rest
 *.http
+*.db
 
 .envrc
 .env
-!.devcontainer/.env

@@ -113,6 +113,11 @@ func (app *application) handleAuthSignupPost(w http.ResponseWriter, r *http.Requ
 		Password string `form:"password" validate:"required,min=8,max=72"`
 	}
 
+	err := app.parseForm(r, &form)
+	if err != nil {
+		return err
+	}
+
 	user, err := app.models.User.New(form.Username, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateUsername) {

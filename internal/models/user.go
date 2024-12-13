@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/alexedwards/argon2id"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type UserModel struct {
@@ -15,11 +16,13 @@ type UserModel struct {
 type User struct {
 	ID           int
 	Username     string
-	PasswordHash []byte
+	PasswordHash string
 }
 
 func (u User) Validate() error {
-	return nil
+	return validation.ValidateStruct(&u,
+		validation.Field(&u.Username, validation.Required),
+		validation.Field(&u.PasswordHash, validation.Required))
 }
 
 func (u *User) SetPasswordHash(password string) error {
@@ -28,7 +31,7 @@ func (u *User) SetPasswordHash(password string) error {
 		return err
 	}
 
-	u.PasswordHash = []byte(hash)
+	u.PasswordHash = hash
 
 	return nil
 }

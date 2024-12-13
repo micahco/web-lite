@@ -7,31 +7,35 @@
     <h2>Login</h2>
     <form action="/auth/login" method="POST">
         <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-        <label for="login-username">Username</label>
-        <input type="username" name="username" id="login-username" autocomplete="username" required>
-        <label for="login-password">Password</label>
-        <input type="password" name="password" id="login-passowrd" autocomplete="username" required>
+        <div>
+            <label for="login-username">Username</label>
+            <input type="username" name="username" id="login-username" autocomplete="username" required>
+        </div>
+        <div>
+            <label for="login-password">Password</label>
+            <input type="password" name="password" id="login-passowrd" autocomplete="username" required>
+        </div>
         <button>Login</button>
     </form>
 
     <h2>Sign up</h2>
     <form action="/auth/signup" method="POST">
         <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-            <div>
-                <label for="signup-username">Username</label>
-                <input type="username" name="username" id="signup-username" autocomplete="username" required>
-                {{with .FormErrors.Username}}
-                <span class="form-error">{{.}}</span>
-                {{end}}
-            </div>
-            <div>
-                <label for="signup-password">Password</label>
-                <input type="password" name="password" id="signup-password" autocomplete="current-password" required>
-                {{with .FormErrors.Password}}
-                <span class="form-error">{{.}}</span>
-                {{end}}
-            </div>
-            <button>Sign up</button>
+        <div>
+            <label for="signup-username">Username</label>
+            <input type="username" name="username" id="signup-username" autocomplete="username" required>
+            {{with .FormErrors.Username}}
+            <span class="form-error">{{.}}</span>
+            {{end}}
+        </div>
+        <div>
+            <label for="signup-password">Password</label>
+            <input type="password" name="password" id="signup-password" autocomplete="current-password" required>
+            {{with .FormErrors.Password}}
+            <span class="form-error">{{.}}</span>
+            {{end}}
+        </div>
+        <button>Sign up</button>
     </form>
 </main>
 {{end}}

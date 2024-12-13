@@ -6,6 +6,7 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
+				"qwtel.sqlite-viewer",
 				"jinliming2.vscode-go-template",
 				"bradlc.vscode-tailwindcss"
 			]
