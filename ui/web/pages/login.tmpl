@@ -1,0 +1,31 @@
+{{define "title"}}Welcome{{end}}
+
+{{define "main"}}
+<main>
+    <h1>Welcome</h1>
+
+    <h2>Login</h2>
+    <form action="/auth/login" method="POST">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <label for="email">Email</label>
+        <input type="email" name="email" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input type="password" name="password" autocomplete="username" required>
+        <button>Login</button>
+        <a href="/auth/reset">Forgot password?</a>
+    </form>
+
+    <h2>Sign up</h2>
+    <form action="/auth/signup" method="POST">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <label for="email">Email</label>
+        <input type="email" name="email" autocomplete="username" required>
+        {{with .FormErrors.Email}}
+        <span class="form-error">{{.}}</span>
+        {{end}}
+        <button>Sign up</button>
+    </form>
+</main>
+{{end}}
+
+{{define "scripts"}}{{end}}

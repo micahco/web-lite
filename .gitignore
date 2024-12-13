@@ -1,0 +1,8 @@
+bin/
+
+*.rest
+*.http
+
+.envrc
+.env
+!.devcontainer/.env

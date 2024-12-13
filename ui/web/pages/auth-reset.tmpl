@@ -1,0 +1,25 @@
+{{define "title"}}Reset Password{{end}}
+
+{{define "main"}}
+    <main>
+        <h1>Reset Password</h1>
+
+        <p>
+            A link to reset your password will be sent your email.
+        </p>
+
+        <form action="/auth/reset" method="POST">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            {{if not .IsAuthenticated}}
+            <label for="email">Email</label>
+            <input type="email" name="email" autocomplete="username" required>
+            {{with .FormErrors.Email}}
+            <span class="form-error">{{.}}</span>
+            {{end}}
+            {{end}}         
+            <button>Send verification</button>
+        </form>
+    </main>
+{{end}}
+
+{{define "scripts"}}{{end}}

@@ -1,0 +1,20 @@
+{{define "title"}}Dashboard{{end}}
+
+{{define "main"}}
+<main>
+    <h1>Dashboard</h1>
+
+    <a href="/auth/reset">Change password</a>
+    
+    <table>
+        <tbody>
+            <tr>
+                <th>Email</th>
+                <td>{{.Data.Email}}</td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+{{end}}
+
+{{define "scripts"}}{{end}}
