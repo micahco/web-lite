@@ -99,7 +99,7 @@ func (m *UserModel) GetWithID(id int) (*User, error) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrInvalidCredentials
+			return nil, ErrNoRecord
 		default:
 			return nil, err
 		}
@@ -125,7 +125,7 @@ func (m *UserModel) GetWithUsername(username string) (*User, error) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrInvalidCredentials
+			return nil, ErrNoRecord
 		default:
 			return nil, err
 		}
