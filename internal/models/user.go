@@ -137,7 +137,12 @@ func (m *UserModel) GetWithUsername(username string) (*User, error) {
 func (m *UserModel) GetForCredentials(username, password string) (*User, error) {
 	u, err := m.GetWithUsername(username)
 	if err != nil {
-		return nil, err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrInvalidCredentials
+		default:
+			return nil, err
+		}
 	}
 
 	match, err := argon2id.ComparePasswordAndHash(password, string(u.PasswordHash))
