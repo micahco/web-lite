@@ -58,7 +58,7 @@ func (app *application) handleAuthLoginGet(w http.ResponseWriter, r *http.Reques
 
 func (app *application) handleAuthLoginPost(w http.ResponseWriter, r *http.Request) error {
 	if app.isAuthenticated(r) {
-		return app.renderError(w, r, http.StatusBadRequest, errors.New("already authenticated"))
+		return app.renderError(w, r, http.StatusBadRequest, "already authenticated")
 	}
 
 	var form struct {
@@ -75,7 +75,7 @@ func (app *application) handleAuthLoginPost(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrInvalidCredentials):
-			return app.renderError(w, r, http.StatusUnauthorized, nil)
+			return app.renderError(w, r, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 		default:
 			return err
 		}
@@ -105,7 +105,7 @@ func (app *application) handleAuthLogoutPost(w http.ResponseWriter, r *http.Requ
 
 func (app *application) handleAuthSignupPost(w http.ResponseWriter, r *http.Request) error {
 	if app.isAuthenticated(r) {
-		return app.renderError(w, r, http.StatusBadRequest, errors.New("already authenticated"))
+		return app.renderError(w, r, http.StatusBadRequest, "already authenticated")
 	}
 
 	var form struct {
@@ -121,7 +121,7 @@ func (app *application) handleAuthSignupPost(w http.ResponseWriter, r *http.Requ
 	user, err := app.models.User.New(form.Username, form.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateUsername) {
-			return app.renderError(w, r, http.StatusUnauthorized, nil)
+			return app.renderError(w, r, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 		}
 
 		return err
