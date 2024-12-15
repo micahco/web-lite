@@ -138,7 +138,7 @@ func (m *UserModel) GetForCredentials(username, password string) (*User, error) 
 	u, err := m.GetWithUsername(username)
 	if err != nil {
 		switch {
-		case errors.Is(err, sql.ErrNoRows):
+		case errors.Is(err, ErrNoRecord):
 			return nil, ErrInvalidCredentials
 		default:
 			return nil, err
